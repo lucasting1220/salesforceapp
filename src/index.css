@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    /* ── Light theme — clean, minimal, professional ── */
+
+    --background: 220 20% 97%;       /* #F4F6FA — very light blue-gray page bg */
+    --foreground: 222 39% 12%;       /* #111827 near-black text */
+
+    --card: 0 0% 100%;               /* #FFFFFF pure white cards */
+    --card-foreground: 222 39% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 39% 12%;
+
+    --primary: 221 70% 40%;          /* #1D4ED8 navy blue — matches screenshot button */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 93%;        /* #ECF0F5 very light gray surfaces */
+    --secondary-foreground: 222 39% 20%;
+
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 9% 48%;  /* #6B7280 readable medium gray */
+
+    --accent: 221 70% 40%;           /* same navy for consistency */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 88%;           /* #DDE3EC subtle light border */
+    --input: 220 13% 88%;
+    --ring: 221 70% 40%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 39% 12%;
+    --sidebar-primary: 221 70% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 93%;
+    --sidebar-accent-foreground: 222 39% 20%;
+    --sidebar-border: 220 13% 88%;
+    --sidebar-ring: 221 70% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Subtle card shadow — replaces dark-mode glow */
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  }
+
+  /* Electron drag regions */
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
