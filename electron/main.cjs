@@ -112,8 +112,8 @@ app.whenReady().then(() => {
   startWebSocketServer();
   createFabricWindow();
 
-  // F1 = global toggle expand/collapse (works over full-screen browser)
-  globalShortcut.register('F1', toggleExpand);
+  // ` = global toggle expand/collapse (works over full-screen browser)
+  globalShortcut.register('`', toggleExpand);
 });
 
 app.on('will-quit', () => {
