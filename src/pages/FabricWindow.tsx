@@ -24,6 +24,18 @@ const FabricWindow = () => {
     window.fabricAPI.onSetExpanded((val) => setExpanded(val));
   }, []);
 
+  // Press E to toggle expand when the panel window is focused
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'e' || e.key === 'E') {
+        if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
+        window.fabricAPI?.toggleExpand();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const handleOnboardingComplete = (email: string) => {
     localStorage.setItem(STORAGE_KEY, email);
     setOnboarded(true);

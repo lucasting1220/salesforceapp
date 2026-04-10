@@ -10,9 +10,6 @@ import { fabricBridge } from "@/lib/fabricBridge";
 
 type AppTab = "gmail" | "finance" | "healthcare" | "retail";
 
-// Detect if running inside Electron
-const isElectron = typeof window !== "undefined" && !!(window as any).fabricAPI;
-
 const Index = () => {
   const [activeApp, setActiveApp] = useState<AppTab>("gmail");
   const [detectedClient, setDetectedClient] = useState<string | null>(null);
@@ -21,9 +18,8 @@ const Index = () => {
 
   const appLabel = activeApp === "gmail" ? "Gmail" : activeApp === "finance" ? "FinanceOS" : activeApp === "healthcare" ? "Healthcare" : "Retail";
 
-  // Only connect WebSocket bridge when running in Electron
+  // Always attempt WebSocket connection — panel is live when Electron is running
   useEffect(() => {
-    if (!isElectron) return;
     fabricBridge.connect();
     fabricBridge.onFabricClosed(() => {
       setDetectedClient(null);
@@ -39,21 +35,21 @@ const Index = () => {
     setDetectedClient(clientId);
     if (clientId) {
       setShowTip(false);
-      if (isElectron) fabricBridge.sendClientDetected(clientId, appLabel);
+      if (fabricBridge.connected) fabricBridge.sendClientDetected(clientId, appLabel);
     } else {
-      if (isElectron) fabricBridge.sendClientCleared();
+      if (fabricBridge.connected) fabricBridge.sendClientCleared();
     }
   }, [appLabel]);
 
   const handleSwitchApp = (app: AppTab) => {
     setActiveApp(app);
     setDetectedClient(null);
-    if (isElectron) fabricBridge.sendClientCleared();
+    if (fabricBridge.connected) fabricBridge.sendClientCleared();
   };
 
   const handleClosePanel = () => {
     setDetectedClient(null);
-    if (isElectron) fabricBridge.sendClientCleared();
+    if (fabricBridge.connected) fabricBridge.sendClientCleared();
   };
 
   return (
@@ -112,10 +108,10 @@ const Index = () => {
         <div className="flex items-center gap-2">
           <div className={`h-2.5 w-2.5 rounded-full transition-colors ${
             detectedClient ? "bg-accent animate-pulse" :
-            isElectron ? (panelLive ? "bg-green-500" : "bg-muted-foreground") : "bg-green-500"
+            panelLive ? "bg-green-500" : "bg-muted-foreground"
           }`} />
           <span className="text-xs text-muted-foreground">
-            {detectedClient ? "Panel active" : isElectron ? (panelLive ? "Panel ready" : "Panel offline") : "Web demo"}
+            {detectedClient ? "Panel active" : panelLive ? "Panel ready" : "Web demo"}
           </span>
         </div>
       </div>
@@ -165,8 +161,8 @@ const Index = () => {
           </AnimatePresence>
         </div>
 
-        {/* Inline Robin panel (web only — Electron uses a separate native window) */}
-        {!isElectron && (
+        {/* Inline Robin panel (fallback when Electron is not running) */}
+        {!panelLive && (
           <AnimatePresence>
             {detectedClient && (
               <motion.div
