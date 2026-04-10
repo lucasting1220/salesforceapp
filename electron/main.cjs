@@ -112,8 +112,9 @@ app.whenReady().then(() => {
   startWebSocketServer();
   createFabricWindow();
 
-  // F1 = global toggle expand/collapse (works over full-screen browser)
-  globalShortcut.register('F1', toggleExpand);
+  // Cmd/Ctrl+Shift+E = global toggle expand/collapse
+  const registered = globalShortcut.register('CommandOrControl+Shift+E', toggleExpand);
+  if (!registered) console.error('[Robin] Failed to register expand shortcut');
 });
 
 app.on('will-quit', () => {
