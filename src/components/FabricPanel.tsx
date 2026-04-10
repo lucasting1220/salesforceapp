@@ -131,7 +131,7 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
               )}
             </div>
             <div className="no-drag flex items-center gap-2">
-              <span className="text-[9px] text-muted-foreground">{expanded ? "F1 to collapse" : "F1 for full view"}</span>
+              <span className="text-[9px] text-muted-foreground">{expanded ? "` to collapse" : "` for full view"}</span>
               {onSettings && <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />}
               <X className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onClose} />
             </div>
@@ -485,7 +485,7 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
                 className="text-[10px] px-1.5 py-0.5 rounded bg-[#7c3aed]/10 text-[#7c3aed] font-medium">Customer 360</motion.span>}
             </div>
             <div className="no-drag flex items-center gap-2">
-              <span className="text-[9px] text-muted-foreground">{expanded ? "F1 to collapse" : "F1 for full view"}</span>
+              <span className="text-[9px] text-muted-foreground">{expanded ? "` to collapse" : "` for full view"}</span>
               {onSettings && <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />}
               <X className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onClose} />
             </div>
@@ -744,7 +744,7 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
             )}
           </div>
           <div className="no-drag flex items-center gap-2">
-            <span className="text-[9px] text-muted-foreground">{expanded ? "F1 to collapse" : "F1 for full view"}</span>
+            <span className="text-[9px] text-muted-foreground">{expanded ? "` to collapse" : "` for full view"}</span>
             {onSettings && (
               <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />
             )}
