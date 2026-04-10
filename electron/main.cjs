@@ -8,6 +8,7 @@ const COMPACT  = { width: 380, height: 720 };
 const EXPANDED = { width: 700, height: 780 };
 
 let fabricWindow = null;
+let fabricReady = false;   // true once the renderer has painted at least once
 let wss = null;
 let isExpanded = false;
 
@@ -43,6 +44,12 @@ function createFabricWindow() {
 
   fabricWindow.setAlwaysOnTop(true, 'screen-saver');
   fabricWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  fabricWindow.setBackgroundColor('#ffffff');
+
+  // Only allow the window to become visible once React has painted
+  fabricWindow.once('ready-to-show', () => {
+    fabricReady = true;
+  });
 
   if (isDev) {
     fabricWindow.loadURL('http://localhost:5173?view=fabric');
@@ -74,11 +81,19 @@ function showFabricPanel(clientId, activeApp) {
   positionPanel();
   fabricWindow.setAlwaysOnTop(true, 'screen-saver');
   fabricWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  fabricWindow.showInactive();
-  setTimeout(() => {
+
+  const doShow = () => {
     fabricWindow.webContents.send('load-client', { clientId, activeApp });
     fabricWindow.webContents.send('set-expanded', false);
-  }, 60);
+    fabricWindow.showInactive();
+  };
+
+  // Wait for the renderer to be ready before showing to avoid white flash
+  if (fabricReady) {
+    doShow();
+  } else {
+    fabricWindow.once('ready-to-show', doShow);
+  }
 }
 
 function hideFabricPanel() {
