@@ -5,6 +5,7 @@ import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
 
 const STORAGE_KEY = "fabric_onboarded";
+const PENDING_KEY = "robin_pending_client";
 
 type View = "panel" | "settings";
 
@@ -16,12 +17,37 @@ const FabricWindow = () => {
   const [view, setView] = useState<View>("panel");
 
   useEffect(() => {
-    if (!window.fabricAPI) return;
-    window.fabricAPI.onLoadClient(({ clientId, activeApp }) => {
-      setClientId(clientId);
-      setActiveApp(activeApp);
-    });
-    window.fabricAPI.onSetExpanded((val) => setExpanded(val));
+    if (window.fabricAPI) {
+      // Electron mode — IPC bridge
+      window.fabricAPI.onLoadClient(({ clientId, activeApp }) => {
+        setClientId(clientId);
+        setActiveApp(activeApp);
+      });
+      window.fabricAPI.onSetExpanded((val) => setExpanded(val));
+    } else {
+      // Web popup mode — read initial state from localStorage then listen via BroadcastChannel
+      const pending = localStorage.getItem(PENDING_KEY);
+      if (pending) {
+        try {
+          const { clientId, activeApp } = JSON.parse(pending);
+          setClientId(clientId);
+          setActiveApp(activeApp);
+        } catch {}
+      }
+
+      const bc = new BroadcastChannel("robin");
+      bc.onmessage = (e) => {
+        if (e.data.type === "client-detected") {
+          setClientId(e.data.clientId);
+          setActiveApp(e.data.activeApp);
+        } else if (e.data.type === "client-cleared") {
+          setClientId(null);
+        }
+      };
+      // Signal to the opener that we're ready to receive messages
+      bc.postMessage({ type: "popup-ready" });
+      return () => bc.close();
+    }
   }, []);
 
   const handleOnboardingComplete = (email: string) => {
@@ -30,7 +56,11 @@ const FabricWindow = () => {
   };
 
   const handleClose = () => {
-    window.fabricAPI?.close();
+    if (window.fabricAPI) {
+      window.fabricAPI.close();
+    } else {
+      window.close();
+    }
   };
 
   const handleLogout = () => {
