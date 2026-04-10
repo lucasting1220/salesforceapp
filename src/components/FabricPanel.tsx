@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Users, FileText, TrendingUp, TrendingDown, Minus, Zap, CheckCircle2, Circle, AlertCircle, Settings } from "lucide-react";
-import { clients, PIPELINE_STAGES } from "@/data/mockData";
+import { X, Clock, Users, FileText, TrendingUp, TrendingDown, Minus, Zap, CheckCircle2, Circle, AlertCircle, Settings, Activity, Pill, FlaskConical, CalendarClock, AlertTriangle, ShoppingBag, Package } from "lucide-react";
+import { clients, patients, retailCustomers, PIPELINE_STAGES } from "@/data/mockData";
 import { useState } from "react";
 import TheBrief from "@/components/TheBrief";
-import { generateBrief } from "@/lib/generateBrief";
+import { generateBrief, generateHealthcareBrief, generateRetailBrief } from "@/lib/generateBrief";
 
 interface FabricPanelProps {
   clientId: string | null;
@@ -56,12 +56,21 @@ const AutoIcon = ({ automated }: { automated: boolean }) =>
 const taskDueColor = (due: string) =>
   due === "Overdue" ? "text-destructive" : due === "Today" ? "text-[#e37400]" : "text-muted-foreground";
 
+const labStatusStyle = (s: string) =>
+  s === "critical" ? "bg-[#fce8e6] text-[#d93025]" :
+  s === "abnormal" ? "bg-[#fef7e0] text-[#e37400]" :
+  "bg-[#e6f4ea] text-[#188038]";
+
 const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = false, expanded = false }: FabricPanelProps) => {
-  const client = clientId ? clients[clientId] : null;
+  const isHealthcare = activeApp === "Healthcare";
+  const isRetail     = activeApp === "Retail";
+  const client   = (!isHealthcare && !isRetail && clientId) ? clients[clientId]         : null;
+  const patient  = (isHealthcare  && clientId)              ? patients[clientId]         : null;
+  const customer = (isRetail      && clientId)              ? retailCustomers[clientId]  : null;
   const [note, setNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
 
-  if (!client) {
+  if (!client && !patient && !customer) {
     if (!standalone) return null;
     return (
       <div className="w-full h-full flex flex-col bg-card">
@@ -72,7 +81,7 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
                 <path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" fill="currentColor" className="text-primary-foreground" opacity="0.9"/>
               </svg>
             </div>
-            <span className="text-xs font-semibold text-foreground">Salesforce Fabric</span>
+            <span className="text-xs font-semibold text-foreground">Robin</span>
           </div>
           <div className="no-drag flex items-center gap-2">
             {onSettings && (
@@ -88,9 +97,617 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
     );
   }
 
-  const { salesCloud } = client;
+  // ── Healthcare panel ──────────────────────────────────────────────────────
+  if (patient) {
+    const riskColors = {
+      stable:   { bg: "bg-[#e6f4ea]", text: "text-[#188038]" },
+      monitor:  { bg: "bg-[#fef7e0]", text: "text-[#e37400]" },
+      critical: { bg: "bg-[#fce8e6]", text: "text-[#d93025]" },
+    }[patient.riskLevel];
+
+    return (
+      <AnimatePresence>
+        <motion.div
+          key={patient.id}
+          initial={standalone ? { opacity: 0, scale: 0.97 } : { x: 320, opacity: 0 }}
+          animate={standalone ? { opacity: 1, scale: 1 }   : { x: 0, opacity: 1 }}
+          exit={standalone    ? { opacity: 0, scale: 0.97 } : { x: 320, opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className={standalone ? "w-full h-full flex flex-col overflow-hidden" : "w-80 h-full border-l flex flex-col overflow-hidden"}
+          style={{ background: "hsl(var(--card))" }}
+        >
+          {/* Header */}
+          <div className="drag-region px-4 py-3 border-b border-border flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-md bg-[#0075C9] flex items-center justify-center">
+                <Activity className="h-3.5 w-3.5 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-foreground">Robin — Healthcare</span>
+              {expanded && (
+                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-[#0075C9]/10 text-[#0075C9] font-medium">
+                  Clinical View
+                </motion.span>
+              )}
+            </div>
+            <div className="no-drag flex items-center gap-2">
+              <span className="text-[9px] text-muted-foreground">{expanded ? "F1 to collapse" : "F1 for full view"}</span>
+              {onSettings && <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />}
+              <X className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onClose} />
+            </div>
+          </div>
+
+          <div className="flex flex-1 overflow-hidden">
+
+            {/* Compact column */}
+            <div className="flex flex-col overflow-y-auto p-4 space-y-4" style={{ width: expanded ? "380px" : "100%", minWidth: expanded ? "380px" : undefined }}>
+
+              {/* Brief */}
+              <TheBrief text={generateHealthcareBrief(patient)} clientKey={`${patient.id}-hc`} />
+
+              {/* Patient header */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0">
+                    {patient.name.split(" ").map(n => n[0]).join("").slice(0,2)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-foreground truncate">{patient.name}</h3>
+                    <p className="text-[10px] text-muted-foreground">{patient.mrn} · {patient.age}y {patient.gender} · {patient.bloodType}</p>
+                  </div>
+                  <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold ${riskColors.bg} ${riskColors.text}`}>
+                    {patient.riskLevel.charAt(0).toUpperCase() + patient.riskLevel.slice(1)}
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Active alerts */}
+              {patient.alerts.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                  className="rounded-lg border border-[#d93025]/25 bg-[#fce8e6]/40 p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <AlertTriangle className="h-3 w-3 text-[#d93025]" />
+                    <span className="text-[10px] font-semibold text-[#d93025] uppercase">Alerts</span>
+                  </div>
+                  {patient.alerts.slice(0, 2).map((a, i) => (
+                    <p key={i} className="text-[11px] text-foreground leading-snug">{a}</p>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Conditions */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+                className="rounded-lg border border-border bg-secondary/50 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">Active Conditions</span>
+                </div>
+                <div className="space-y-1">
+                  {patient.conditions.map((c, i) => (
+                    <div key={i} className="flex items-start gap-1.5 text-[11px]">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-1" />
+                      <span className="text-foreground leading-snug">{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Medications */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Pill className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">Medications</span>
+                </div>
+                <div className="space-y-1.5">
+                  {patient.medications.map((m, i) => (
+                    <div key={i} className="flex items-center justify-between text-[11px] rounded-md bg-secondary px-2.5 py-1.5">
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-foreground">{m.name}</span>
+                        <span className="text-muted-foreground ml-1">{m.dose}</span>
+                      </div>
+                      <span className="text-muted-foreground text-[10px] shrink-0 ml-2">{m.frequency}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Recent labs */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">Recent Labs</span>
+                </div>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  {patient.labResults.slice(0, 4).map((l, i) => (
+                    <div key={i} className={`flex items-center justify-between px-3 py-2 text-[11px] ${i < 3 ? "border-b border-border" : ""}`}>
+                      <span className="text-foreground">{l.test}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">{l.value}</span>
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${labStatusStyle(l.status)}`}>{l.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Billing & Insurance */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">Billing & Insurance</span>
+                  <span className="ml-auto text-[9px] text-muted-foreground">{patient.billing.system}</span>
+                </div>
+                {/* Billing alerts */}
+                {patient.billing.billingAlerts.length > 0 && (
+                  <div className="mb-2 rounded-lg border border-[#e37400]/25 bg-[#fef7e0]/50 p-2.5 space-y-1">
+                    {patient.billing.billingAlerts.map((a, i) => (
+                      <p key={i} className="text-[10px] text-foreground leading-snug">{a}</p>
+                    ))}
+                  </div>
+                )}
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-border text-[11px]">
+                    <span className="text-muted-foreground">Claim {patient.billing.claimNumber}</span>
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                      patient.billing.claimStatus === "Approved"     ? "bg-[#e6f4ea] text-[#188038]" :
+                      patient.billing.claimStatus === "Pending"      ? "bg-[#fef7e0] text-[#e37400]" :
+                      patient.billing.claimStatus === "Under Review" ? "bg-[#fef7e0] text-[#e37400]" :
+                      "bg-[#fce8e6] text-[#d93025]"
+                    }`}>{patient.billing.claimStatus}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-border text-[11px]">
+                    <span className="text-muted-foreground">Patient owes</span>
+                    <span className={`font-semibold ${patient.billing.outstandingBalance !== "$0" ? "text-[#d93025]" : "text-[#188038]"}`}>
+                      {patient.billing.outstandingBalance}
+                    </span>
+                  </div>
+                  <div className="px-3 py-2">
+                    {patient.billing.priorAuths.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between text-[10px] py-0.5">
+                        <span className="text-foreground truncate flex-1 mr-2">{a.item}</span>
+                        <span className={`shrink-0 font-semibold ${
+                          a.status === "Approved" ? "text-[#188038]" :
+                          a.status === "Pending"  ? "text-[#e37400]" : "text-[#d93025]"
+                        }`}>{a.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Log note */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="pb-2">
+                <textarea
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  placeholder="Add clinical note…"
+                  className="w-full h-14 rounded-lg bg-secondary border border-border px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button onClick={() => { if (note.trim()) { setNoteSaved(true); setTimeout(() => setNoteSaved(false), 2000); setNote(""); } }}
+                  className="w-full mt-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity">
+                  {noteSaved ? "✓ Note Saved" : "Save Clinical Note"}
+                </button>
+              </motion.div>
+            </div>
+
+            {/* Expanded: full clinical view */}
+            <AnimatePresence>
+              {expanded && (
+                <motion.div
+                  key="hc-expanded"
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 30 }}
+                  transition={{ type: "spring", damping: 28, stiffness: 220, delay: 0.05 }}
+                  className="flex-1 border-l border-border overflow-y-auto p-4 space-y-5"
+                >
+                  {/* All labs */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Full Lab Panel</span>
+                    </div>
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      {patient.labResults.map((l, i) => (
+                        <div key={i} className={`px-3 py-2 text-[11px] ${i < patient.labResults.length - 1 ? "border-b border-border" : ""}`}>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-medium text-foreground">{l.test}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-foreground">{l.value}</span>
+                              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${labStatusStyle(l.status)}`}>{l.status}</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-muted-foreground">
+                            <span>Ref: {l.reference}</span>
+                            <span>{l.date}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Visit history */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Visit History</span>
+                    </div>
+                    <div className="space-y-2">
+                      {patient.recentVisits.map((v, i) => (
+                        <div key={i} className="rounded-lg bg-secondary p-2.5">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[11px] font-semibold text-foreground">{v.type}</span>
+                            <span className="text-[10px] text-muted-foreground">{v.date}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mb-1">{v.provider}</p>
+                          <p className="text-[10px] text-foreground leading-snug">{v.summary}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Upcoming appointments */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Upcoming Appointments</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {patient.upcomingAppointments.map((a, i) => (
+                        <div key={i} className="rounded-lg bg-secondary px-3 py-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-foreground">{a.type}</span>
+                            <span className="text-[10px] text-primary font-medium">{a.date}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{a.provider} · {a.location}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Care team */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Care Team</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {patient.careTeam.map((m, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[11px]">
+                          <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center text-[9px] font-bold text-foreground shrink-0">
+                            {m.name.split(" ").slice(-1)[0][0]}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{m.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{m.role}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Allergies */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Allergies</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {patient.allergies.map((a, i) => (
+                        <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-[#fce8e6] text-[#d93025] font-medium">{a}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Connected Sources */}
+                  <div className="pb-4">
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <div className="h-2 w-2 rounded-full bg-[#188038] animate-pulse" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Connected Sources</span>
+                      <span className="ml-auto text-[9px] text-muted-foreground">Live sync</span>
+                    </div>
+                    <div className="space-y-2">
+                      {[
+                        { label: "EHR",        system: patient.sources.ehr.system,        lastSync: patient.sources.ehr.lastSync,        color: "#1a73e8", abbr: "EHR" },
+                        { label: "Billing",    system: patient.sources.billing.system,    lastSync: patient.sources.billing.lastSync,    color: "#188038", abbr: "BIL" },
+                        { label: "Lab",        system: patient.sources.lab.system,        lastSync: patient.sources.lab.lastSync,        color: "#5b21b6", abbr: "LAB" },
+                        { label: "Scheduling", system: patient.sources.scheduling.system, lastSync: patient.sources.scheduling.lastSync, color: "#e37400", abbr: "SCH" },
+                      ].map((src, i) => (
+                        <div key={i} className="rounded-lg border border-border overflow-hidden">
+                          <div className="flex items-center gap-2 px-3 py-2 bg-secondary/40">
+                            <div className="h-5 w-8 rounded flex items-center justify-center text-white text-[8px] font-bold shrink-0" style={{ background: src.color }}>{src.abbr}</div>
+                            <span className="text-[11px] font-semibold text-foreground flex-1">{src.system}</span>
+                            <div className="flex items-center gap-1">
+                              <div className="h-1.5 w-1.5 rounded-full bg-[#188038]" />
+                              <span className="text-[9px] text-muted-foreground">Connected</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between px-3 py-1.5 text-[10px]">
+                            <span className="text-muted-foreground">{src.label} data</span>
+                            <span className="text-foreground font-medium">Synced {src.lastSync}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // ── Retail panel ─────────────────────────────────────────────────────────
+  if (customer) {
+    const tierColors: Record<string, { bg: string; text: string }> = {
+      Bronze:   { bg: "bg-[#f5e6d3]", text: "text-[#92400e]" },
+      Silver:   { bg: "bg-[#f1f5f9]", text: "text-[#475569]" },
+      Gold:     { bg: "bg-[#fef9c3]", text: "text-[#854d0e]" },
+      Platinum: { bg: "bg-[#ede9fe]", text: "text-[#5b21b6]" },
+    };
+    const segColors: Record<string, { bg: string; text: string }> = {
+      VIP:      { bg: "bg-[#ede9fe]", text: "text-[#5b21b6]" },
+      Loyal:    { bg: "bg-[#e6f4ea]", text: "text-[#188038]" },
+      "At Risk":{ bg: "bg-[#fce8e6]", text: "text-[#d93025]" },
+      New:      { bg: "bg-[#e8f0fe]", text: "text-[#1a73e8]" },
+      Churned:  { bg: "bg-secondary",  text: "text-muted-foreground" },
+    };
+    const orderStatusColors: Record<string, string> = {
+      Delivered:  "text-[#188038]", Processing: "text-[#1a73e8]",
+      Shipped:    "text-[#e37400]", Returned:   "text-[#d93025]", Cancelled: "text-muted-foreground",
+    };
+    const tc = tierColors[customer.loyaltyTier];
+    const sc = segColors[customer.segment];
+    const openTickets = customer.supportTickets.filter(t => t.status === "Open").length;
+
+    return (
+      <AnimatePresence>
+        <motion.div key={customer.id}
+          initial={standalone ? { opacity: 0, scale: 0.97 } : { x: 320, opacity: 0 }}
+          animate={standalone ? { opacity: 1, scale: 1 }   : { x: 0, opacity: 1 }}
+          exit={standalone    ? { opacity: 0, scale: 0.97 } : { x: 320, opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className={standalone ? "w-full h-full flex flex-col overflow-hidden" : "w-80 h-full border-l flex flex-col overflow-hidden"}
+          style={{ background: "hsl(var(--card))" }}>
+
+          {/* Header */}
+          <div className="drag-region px-4 py-3 border-b border-border flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-md bg-[#7c3aed] flex items-center justify-center">
+                <ShoppingBag className="h-3.5 w-3.5 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-foreground">Robin — Retail</span>
+              {expanded && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-[#7c3aed]/10 text-[#7c3aed] font-medium">Customer 360</motion.span>}
+            </div>
+            <div className="no-drag flex items-center gap-2">
+              <span className="text-[9px] text-muted-foreground">{expanded ? "F1 to collapse" : "F1 for full view"}</span>
+              {onSettings && <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />}
+              <X className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onClose} />
+            </div>
+          </div>
+
+          <div className="flex flex-1 overflow-hidden">
+            {/* Compact column */}
+            <div className="flex flex-col overflow-y-auto p-4 space-y-4" style={{ width: expanded ? "380px" : "100%", minWidth: expanded ? "380px" : undefined }}>
+
+              <TheBrief text={generateRetailBrief(customer)} clientKey={`${customer.id}-retail`} />
+
+              {/* Customer header */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${tc.bg} ${tc.text}`}>
+                    {customer.name.split(" ").map(n => n[0]).join("")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-foreground truncate">{customer.name}</h3>
+                    <p className="text-[10px] text-muted-foreground truncate">{customer.email}</p>
+                  </div>
+                  <span className={`shrink-0 text-[9px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>{customer.segment}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center rounded-lg bg-secondary/50 p-2.5">
+                  {[
+                    { label: "LTV",    value: customer.lifetimeValue },
+                    { label: "Orders", value: String(customer.totalOrders) },
+                    { label: "AOV",    value: customer.avgOrderValue },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <p className="text-xs font-bold text-foreground">{s.value}</p>
+                      <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Loyalty bar */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                className="rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">Loyalty</span>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${tc.bg} ${tc.text}`}>{customer.loyaltyTier}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
+                  <div className="h-full rounded-full bg-[#7c3aed]" style={{ width: `${Math.min((customer.loyaltyPoints / 5000) * 100, 100)}%` }} />
+                </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>{customer.loyaltyPoints.toLocaleString()} pts</span>
+                  <span>{Math.max(0, 5000 - customer.loyaltyPoints).toLocaleString()} to reward</span>
+                </div>
+              </motion.div>
+
+              {/* Recent orders */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">Recent Orders</span>
+                </div>
+                <div className="space-y-1.5">
+                  {customer.orders.slice(0, 3).map((o, i) => (
+                    <div key={i} className="flex items-center justify-between rounded-md bg-secondary px-2.5 py-2 text-[11px]">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-foreground font-medium">{o.id}</p>
+                        <p className="text-muted-foreground text-[10px] truncate">{o.items}</p>
+                      </div>
+                      <div className="shrink-0 text-right ml-2">
+                        <p className="font-semibold text-foreground">{o.total}</p>
+                        <p className={`text-[9px] font-medium ${orderStatusColors[o.status]}`}>{o.status}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Open tickets alert */}
+              {openTickets > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                  className="rounded-lg border border-[#e37400]/25 bg-[#fef7e0]/50 p-3">
+                  <p className="text-[10px] font-semibold text-[#e37400] uppercase mb-1">Open Support Tickets</p>
+                  {customer.supportTickets.filter(t => t.status === "Open").map((t, i) => (
+                    <p key={i} className="text-[11px] text-foreground">{t.subject}</p>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Log note */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="pb-2">
+                <textarea value={note} onChange={e => setNote(e.target.value)}
+                  placeholder="Add customer note…"
+                  className="w-full h-14 rounded-lg bg-secondary border border-border px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
+                <button onClick={() => { if (note.trim()) { setNoteSaved(true); setTimeout(() => setNoteSaved(false), 2000); setNote(""); } }}
+                  className="w-full mt-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity">
+                  {noteSaved ? "✓ Note Saved" : "Save Note"}
+                </button>
+              </motion.div>
+            </div>
+
+            {/* Expanded: Customer 360 */}
+            <AnimatePresence>
+              {expanded && (
+                <motion.div key="retail-expanded"
+                  initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}
+                  transition={{ type: "spring", damping: 28, stiffness: 220, delay: 0.05 }}
+                  className="flex-1 border-l border-border overflow-y-auto p-4 space-y-5">
+
+                  {/* Behavioral signals */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Behavioral Signals</span>
+                    </div>
+                    <div className="rounded-lg bg-secondary p-3 space-y-1.5">
+                      {customer.signals.map((s, i) => (
+                        <div key={i} className="flex items-start gap-1.5 text-[11px]">
+                          <div className="h-1.5 w-1.5 rounded-full bg-[#7c3aed] shrink-0 mt-1.5" />
+                          <span className="text-foreground">{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recommended actions */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Recommended Actions</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {customer.recommendedActions.map((a, i) => (
+                        <div key={i} className="flex items-start gap-2 rounded-lg bg-secondary px-2.5 py-2 text-[11px]">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-[#7c3aed] shrink-0 mt-0.5" />
+                          <span className="text-foreground">{a}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Full order history */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Full Order History</span>
+                    </div>
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      {customer.orders.map((o, i) => (
+                        <div key={i} className={`px-3 py-2.5 text-[11px] ${i < customer.orders.length - 1 ? "border-b border-border" : ""}`}>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-mono font-semibold text-foreground">{o.id}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-foreground">{o.total}</span>
+                              <span className={`text-[9px] font-medium ${orderStatusColors[o.status]}`}>{o.status}</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-muted-foreground">
+                            <span className="truncate mr-2">{o.items}</span>
+                            <span className="shrink-0">{o.date}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Returns */}
+                  {customer.returns.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase">Returns</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {customer.returns.map((r, i) => (
+                          <div key={i} className="rounded-lg bg-secondary px-3 py-2 text-[11px]">
+                            <div className="flex justify-between mb-0.5">
+                              <span className="font-medium text-foreground">{r.item}</span>
+                              <span className="text-[#d93025] font-semibold">{r.refund}</span>
+                            </div>
+                            <p className="text-muted-foreground text-[10px]">{r.orderId} · {r.reason} · {r.date}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All tickets */}
+                  {customer.supportTickets.length > 0 && (
+                    <div className="pb-4">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase">Support History</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {customer.supportTickets.map((t, i) => (
+                          <div key={i} className="rounded-lg bg-secondary px-3 py-2 text-[11px]">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="font-medium text-foreground truncate flex-1 mr-2">{t.subject}</span>
+                              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
+                                t.status === "Open" ? "bg-[#fce8e6] text-[#d93025]" :
+                                t.status === "Pending" ? "bg-[#fef7e0] text-[#e37400]" :
+                                "bg-[#e6f4ea] text-[#188038]"
+                              }`}>{t.status}</span>
+                            </div>
+                            <p className="text-muted-foreground text-[10px]">{t.id} · {t.date}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // ── Sales Cloud panel ─────────────────────────────────────────────────────
+  const { salesCloud } = client!;
   const { opportunity, contacts, forecast, pendingAutomation, einsteinScore } = salesCloud;
-  const health = healthColor(client.health);
+  const health = healthColor(client!.health);
 
   const handleSaveNote = () => {
     if (!note.trim()) return;
@@ -118,7 +735,7 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
                 <path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" fill="currentColor" className="text-primary-foreground" opacity="0.9"/>
               </svg>
             </div>
-            <span className="text-xs font-semibold text-foreground">Salesforce Fabric</span>
+            <span className="text-xs font-semibold text-foreground">Robin</span>
             {expanded && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">

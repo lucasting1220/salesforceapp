@@ -84,7 +84,7 @@ export default function Settings({ onBack, onLogout }: SettingsProps) {
           <div className="rounded-xl border border-border overflow-hidden">
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
               <span className="text-[12px] text-foreground">Plan</span>
-              <span className="text-[11px] text-muted-foreground">Sales Cloud Enterprise</span>
+              <span className="text-[11px] text-muted-foreground">Robin Enterprise</span>
             </div>
             <div className="flex items-center justify-between px-3 py-2.5">
               <span className="text-[12px] text-foreground">Version</span>

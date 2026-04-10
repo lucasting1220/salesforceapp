@@ -1,4 +1,4 @@
-# Salesforce Fabric — Electron Demo
+# Robin — Electron Demo
 
 ## What this is
 An interactive desktop demo of a "Salesforce Fabric" concept — a frameless Electron panel that floats over any app and surfaces Sales Cloud context (opportunities, contacts, forecasting, Einstein score, connected sources) when a client is detected in a simulated Gmail or FinanceOS view.

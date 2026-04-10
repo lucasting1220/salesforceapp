@@ -102,7 +102,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" fill="white" opacity="0.9"/>
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-foreground mb-1">Salesforce Fabric</h1>
+            <h1 className="text-lg font-bold text-foreground mb-1">Robin</h1>
             <p className="text-xs text-muted-foreground mb-8 leading-relaxed">
               Your work email connects everything.<br/>One identity across every tool you use.
             </p>
@@ -138,7 +138,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               </div>
               <h2 className="text-base font-bold text-foreground">Connect your tools</h2>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Fabric surfaces context from every connected app — without you switching tabs.
+                Robin surfaces context from every connected app — without you switching tabs.
               </p>
             </div>
 
@@ -183,7 +183,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               </p>
               <button onClick={handleFinish} disabled={connected.size === 0}
                 className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-30 flex items-center justify-center gap-2">
-                Launch Fabric <ArrowRight className="h-3.5 w-3.5" />
+                Launch Robin <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </motion.div>
@@ -220,7 +220,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             <div>
               <h2 className="text-sm font-bold text-foreground mb-1">You're connected</h2>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Fabric is running. Click any contact<br/>in {connected.has("gmail") ? "Gmail" : "your apps"} to see their full context.
+                Robin is running. Click any contact<br/>in {connected.has("gmail") ? "Gmail" : "your apps"} to see their full context.
               </p>
             </div>
           </motion.div>

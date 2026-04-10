@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
-import { Mail, BarChart3, Info } from "lucide-react";
+import { Mail, BarChart3, Info, Activity, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SimulatedGmail from "@/components/SimulatedGmail";
 import SimulatedFinancePortal from "@/components/SimulatedFinancePortal";
+import SimulatedHealthcare from "@/components/SimulatedHealthcare";
+import SimulatedRetail from "@/components/SimulatedRetail";
 import { fabricBridge } from "@/lib/fabricBridge";
 
-type AppTab = "gmail" | "finance";
+type AppTab = "gmail" | "finance" | "healthcare" | "retail";
 
 const Index = () => {
   const [activeApp, setActiveApp] = useState<AppTab>("gmail");
@@ -13,7 +15,7 @@ const Index = () => {
   const [showTip, setShowTip] = useState(true);
   const [panelLive, setPanelLive] = useState(false);
 
-  const appLabel = activeApp === "gmail" ? "Gmail" : "FinanceOS";
+  const appLabel = activeApp === "gmail" ? "Gmail" : activeApp === "finance" ? "FinanceOS" : activeApp === "healthcare" ? "Healthcare" : "Retail";
 
   // Connect to the Electron WebSocket bridge on mount
   useEffect(() => {
@@ -58,7 +60,7 @@ const Index = () => {
             </svg>
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">Salesforce Fabric</span>
+            <span className="text-sm font-bold text-foreground">Robin</span>
             <span className="text-xs text-muted-foreground ml-2">Interactive Demo</span>
           </div>
         </div>
@@ -67,23 +69,35 @@ const Index = () => {
         <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
           <button
             onClick={() => handleSwitchApp("gmail")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-              activeApp === "gmail"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              activeApp === "gmail" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Mail className="h-4 w-4" /> Gmail
           </button>
           <button
             onClick={() => handleSwitchApp("finance")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-              activeApp === "finance"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              activeApp === "finance" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <BarChart3 className="h-4 w-4" /> FinanceOS
+          </button>
+          <button
+            onClick={() => handleSwitchApp("healthcare")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              activeApp === "healthcare" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Activity className="h-4 w-4" /> Healthcare
+          </button>
+          <button
+            onClick={() => handleSwitchApp("retail")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              activeApp === "retail" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <ShoppingBag className="h-4 w-4" /> Retail
           </button>
         </div>
 
@@ -110,7 +124,7 @@ const Index = () => {
           >
             <Info className="h-4 w-4 text-primary shrink-0" />
             <p className="text-xs text-foreground">
-              <strong>Try it:</strong> Click on a client email in Gmail or a row in FinanceOS — the Fabric panel will pop up as a separate native window.
+              <strong>Try it:</strong> Click on a client email in Gmail or a row in FinanceOS — the Robin panel will pop up as a separate native window.
             </p>
             <button onClick={() => setShowTip(false)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">
               Dismiss
@@ -126,9 +140,17 @@ const Index = () => {
             <motion.div key="gmail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
               <SimulatedGmail onClientDetected={handleClientDetected} />
             </motion.div>
-          ) : (
+          ) : activeApp === "finance" ? (
             <motion.div key="finance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
               <SimulatedFinancePortal onClientDetected={handleClientDetected} />
+            </motion.div>
+          ) : activeApp === "healthcare" ? (
+            <motion.div key="healthcare" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+              <SimulatedHealthcare onClientDetected={handleClientDetected} />
+            </motion.div>
+          ) : (
+            <motion.div key="retail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+              <SimulatedRetail onClientDetected={handleClientDetected} />
             </motion.div>
           )}
         </AnimatePresence>
