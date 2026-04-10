@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Users, FileText, TrendingUp, TrendingDown, Minus, Zap, CheckCircle2, Circle, AlertCircle, Settings, Activity, Pill, FlaskConical, CalendarClock, AlertTriangle, ShoppingBag, Package } from "lucide-react";
+import { X, Clock, Users, FileText, TrendingUp, TrendingDown, Minus, Zap, CheckCircle2, Circle, AlertCircle, Settings, Activity, Pill, FlaskConical, CalendarClock, AlertTriangle, ShoppingBag, Package, ChevronsRight, ChevronsLeft } from "lucide-react";
 import { clients, patients, retailCustomers, PIPELINE_STAGES } from "@/data/mockData";
 import { useState } from "react";
 import TheBrief from "@/components/TheBrief";
@@ -131,7 +131,9 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
               )}
             </div>
             <div className="no-drag flex items-center gap-2">
-              <span className="text-[9px] text-muted-foreground">{expanded ? "⌘⇧E to collapse" : "⌘⇧E to expand"}</span>
+              <button onClick={() => window.fabricAPI?.toggleExpand()} className="p-0.5 rounded hover:bg-secondary transition-colors" title={expanded ? "Collapse" : "Expand"}>
+                {expanded ? <ChevronsLeft className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronsRight className="h-3.5 w-3.5 text-muted-foreground" />}
+              </button>
               {onSettings && <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />}
               <X className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onClose} />
             </div>
@@ -485,7 +487,9 @@ const FabricPanel = ({ clientId, activeApp, onClose, onSettings, standalone = fa
                 className="text-[10px] px-1.5 py-0.5 rounded bg-[#7c3aed]/10 text-[#7c3aed] font-medium">Customer 360</motion.span>}
             </div>
             <div className="no-drag flex items-center gap-2">
-              <span className="text-[9px] text-muted-foreground">{expanded ? "⌘⇧E to collapse" : "⌘⇧E to expand"}</span>
+              <button onClick={() => window.fabricAPI?.toggleExpand()} className="p-0.5 rounded hover:bg-secondary transition-colors" title={expanded ? "Collapse" : "Expand"}>
+                {expanded ? <ChevronsLeft className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronsRight className="h-3.5 w-3.5 text-muted-foreground" />}
+              </button>
               {onSettings && <Settings className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onSettings} />}
               <X className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" onClick={onClose} />
             </div>

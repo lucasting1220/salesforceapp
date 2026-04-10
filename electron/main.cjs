@@ -105,7 +105,8 @@ function broadcast(msg) {
 }
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
-ipcMain.on('close-fabric', () => hideFabricPanel());
+ipcMain.on('close-fabric',    () => hideFabricPanel());
+ipcMain.on('toggle-expand',   () => toggleExpand());
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(() => {

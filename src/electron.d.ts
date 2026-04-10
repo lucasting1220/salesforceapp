@@ -9,7 +9,8 @@ interface ElectronAPI {
 interface FabricAPI {
   onLoadClient:  (callback: (data: { clientId: string; activeApp: string }) => void) => void;
   onSetExpanded: (callback: (expanded: boolean) => void) => void;
-  close: () => void;
+  close:         () => void;
+  toggleExpand:  () => void;
 }
 
 declare global {
