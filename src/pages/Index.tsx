@@ -5,9 +5,13 @@ import SimulatedGmail from "@/components/SimulatedGmail";
 import SimulatedFinancePortal from "@/components/SimulatedFinancePortal";
 import SimulatedHealthcare from "@/components/SimulatedHealthcare";
 import SimulatedRetail from "@/components/SimulatedRetail";
+import FabricPanel from "@/components/FabricPanel";
 import { fabricBridge } from "@/lib/fabricBridge";
 
 type AppTab = "gmail" | "finance" | "healthcare" | "retail";
+
+// Detect if running inside Electron
+const isElectron = typeof window !== "undefined" && !!(window as any).fabricAPI;
 
 const Index = () => {
   const [activeApp, setActiveApp] = useState<AppTab>("gmail");
@@ -17,19 +21,17 @@ const Index = () => {
 
   const appLabel = activeApp === "gmail" ? "Gmail" : activeApp === "finance" ? "FinanceOS" : activeApp === "healthcare" ? "Healthcare" : "Retail";
 
-  // Connect to the Electron WebSocket bridge on mount
+  // Only connect WebSocket bridge when running in Electron
   useEffect(() => {
+    if (!isElectron) return;
     fabricBridge.connect();
     fabricBridge.onFabricClosed(() => {
       setDetectedClient(null);
       setPanelLive(false);
     });
-
-    // Poll connection status for the indicator dot
     const interval = setInterval(() => {
       setPanelLive(fabricBridge.connected);
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -37,16 +39,21 @@ const Index = () => {
     setDetectedClient(clientId);
     if (clientId) {
       setShowTip(false);
-      fabricBridge.sendClientDetected(clientId, appLabel);
+      if (isElectron) fabricBridge.sendClientDetected(clientId, appLabel);
     } else {
-      fabricBridge.sendClientCleared();
+      if (isElectron) fabricBridge.sendClientCleared();
     }
   }, [appLabel]);
 
   const handleSwitchApp = (app: AppTab) => {
     setActiveApp(app);
     setDetectedClient(null);
-    fabricBridge.sendClientCleared();
+    if (isElectron) fabricBridge.sendClientCleared();
+  };
+
+  const handleClosePanel = () => {
+    setDetectedClient(null);
+    if (isElectron) fabricBridge.sendClientCleared();
   };
 
   return (
@@ -105,10 +112,10 @@ const Index = () => {
         <div className="flex items-center gap-2">
           <div className={`h-2.5 w-2.5 rounded-full transition-colors ${
             detectedClient ? "bg-accent animate-pulse" :
-            panelLive ? "bg-green-500" : "bg-muted-foreground"
+            isElectron ? (panelLive ? "bg-green-500" : "bg-muted-foreground") : "bg-green-500"
           }`} />
           <span className="text-xs text-muted-foreground">
-            {detectedClient ? "Panel active" : panelLive ? "Panel ready" : "Panel offline"}
+            {detectedClient ? "Panel active" : isElectron ? (panelLive ? "Panel ready" : "Panel offline") : "Web demo"}
           </span>
         </div>
       </div>
@@ -124,7 +131,7 @@ const Index = () => {
           >
             <Info className="h-4 w-4 text-primary shrink-0" />
             <p className="text-xs text-foreground">
-              <strong>Try it:</strong> Click on a client email in Gmail or a row in FinanceOS — the Robin panel will pop up as a separate native window.
+              <strong>Try it:</strong> Click on a client email in Gmail or a row in FinanceOS — the Robin panel will appear as a sidebar.
             </p>
             <button onClick={() => setShowTip(false)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">
               Dismiss
@@ -133,27 +140,54 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Main content — full width, no inline panel */}
-      <div className="flex-1 overflow-hidden p-3">
-        <AnimatePresence mode="wait">
-          {activeApp === "gmail" ? (
-            <motion.div key="gmail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-              <SimulatedGmail onClientDetected={handleClientDetected} />
-            </motion.div>
-          ) : activeApp === "finance" ? (
-            <motion.div key="finance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-              <SimulatedFinancePortal onClientDetected={handleClientDetected} />
-            </motion.div>
-          ) : activeApp === "healthcare" ? (
-            <motion.div key="healthcare" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-              <SimulatedHealthcare onClientDetected={handleClientDetected} />
-            </motion.div>
-          ) : (
-            <motion.div key="retail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-              <SimulatedRetail onClientDetected={handleClientDetected} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Main content */}
+      <div className="flex-1 overflow-hidden p-3 flex gap-3">
+        {/* Simulated app */}
+        <div className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            {activeApp === "gmail" ? (
+              <motion.div key="gmail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                <SimulatedGmail onClientDetected={handleClientDetected} />
+              </motion.div>
+            ) : activeApp === "finance" ? (
+              <motion.div key="finance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                <SimulatedFinancePortal onClientDetected={handleClientDetected} />
+              </motion.div>
+            ) : activeApp === "healthcare" ? (
+              <motion.div key="healthcare" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                <SimulatedHealthcare onClientDetected={handleClientDetected} />
+              </motion.div>
+            ) : (
+              <motion.div key="retail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                <SimulatedRetail onClientDetected={handleClientDetected} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Inline Robin panel (web only — Electron uses a separate native window) */}
+        {!isElectron && (
+          <AnimatePresence>
+            {detectedClient && (
+              <motion.div
+                key={detectedClient}
+                initial={{ x: 320, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 320, opacity: 0 }}
+                transition={{ type: "spring", damping: 28, stiffness: 220 }}
+                className="h-full shrink-0 rounded-xl border border-border overflow-hidden"
+                style={{ width: "340px" }}
+              >
+                <FabricPanel
+                  clientId={detectedClient}
+                  activeApp={appLabel}
+                  onClose={handleClosePanel}
+                  standalone={false}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );
