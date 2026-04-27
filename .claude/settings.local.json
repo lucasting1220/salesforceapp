@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/lucasting/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/d4ff49dd-7b63-4fbb-b52e-80ccd1456656/1430010a-68d2-4387-bcb6-009e25cdd2bc/skills/canvas-design/**)",
+      "Read(//Users/lucasting/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/d4ff49dd-7b63-4fbb-b52e-80ccd1456656/1430010a-68d2-4387-bcb6-009e25cdd2bc/skills/canvas-design/canvas-fonts/**)",
+      "Bash(python3 -c \"import reportlab; print\\(reportlab.Version\\)\")",
+      "Bash(python3 -c \"import matplotlib; print\\(matplotlib.__version__\\)\")",
+      "Bash(python3 -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(pip3 install *)",
+      "Bash(python3 generate_pdf.py)",
+      "Bash(open /Users/lucasting/Downloads/salesforceapp-main/Robin_NYU_Tandon_Submission.pdf)",
+      "Bash(npm run *)",
+      "Bash(npx vite *)",
+      "Bash(npm install *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git -c user.email=\"lucasting1220@gmail.com\" -c user.name=\"Lucas Ting\" commit -m \"Initial commit: Robin — Salesforce Fabric\")"
+    ]
+  }
+}
